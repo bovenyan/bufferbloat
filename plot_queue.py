@@ -85,6 +85,7 @@ def get_style(i):
         return {'color': 'black', 'ls': '-.'}
 
 print args.files
+m.rc('figure', figsize=(16, 6))
 fig = figure()
 ax = fig.add_subplot(111)
 for i, f in enumerate(args.files):
@@ -143,15 +144,15 @@ elif args.cdf:
         plt.ylabel("Fraction")
         plt.xlabel("Packets")
         plt.ylim((0, 1.0))
-        plt.legend(args.legend, loc="upper left")
+        #plt.legend(args.legend, loc="upper left")
         plt.title("")
         ax.xaxis.set_major_locator(MaxNLocator(4))
 else:
     plt.xlabel("Seconds")
-    if args.legend:
-        plt.legend(args.legend, loc="upper left")
-    else:
-        plt.legend(args.files)
+    #if args.legend:
+    #    plt.legend(args.legend, loc="upper left")
+    #else:
+    #    plt.legend(args.files)
 
 if args.out:
     plt.savefig(args.out)

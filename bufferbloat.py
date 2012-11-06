@@ -140,7 +140,7 @@ def bbnet():
     h1 = net.getNodeByName('h1')
     h1.cmd('cd ./http/; nohup python2.7 ./webserver.py &')
     h1.cmd('cd ../')
-    h2.cmd('iperf -s -w 800K -p 5001 -i 1 > iperf-recv.txt &')
+    h2.cmd('iperf -s -w 16m -p 5001 -i 1 > iperf-recv.txt &')
     CLI( net )    
     h1.cmd("sudo pkill -9 -f webserver.py")
     h2.cmd("rm -f index.html*")

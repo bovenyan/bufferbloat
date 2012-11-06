@@ -20,7 +20,7 @@ echo "WGET CWND : ${exp}_tcp_cwnd_wget.png"
 
 rm -f index.html
 touch index.html
-echo "<html><head><title>FIGUES</title></head>" > index.html
+echo "<html><head><title>FIGURES</title></head>" > index.html
 echo "<body><cetner><table border=\"1\">" >> index.html
 echo "<tr><th>Switch Queue Occupancy</th></tr>" >> index.html
 echo "<tr><td><a href=\"${exp}_queue.png\"><img src=\"${exp}_queue.png\"/></a></td></tr>" >> index.html
