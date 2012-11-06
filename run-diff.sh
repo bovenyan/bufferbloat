@@ -5,7 +5,7 @@ python bufferbloat.py --bw-host 1000 \
                 --delay 10 \
                 --dir ./ \
                 --nflows 1 \
-                --maxq 500 \
+                --maxq 100 \
                 -n 2 \
                 --diff \
 
