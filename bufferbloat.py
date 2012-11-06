@@ -6,9 +6,10 @@ from mininet.topo import Topo
 from mininet.node import CPULimitedHost
 from mininet.link import TCLink
 from mininet.net import Mininet
-from mininet.log import lg
+from mininet.log import lg, info
 from mininet.util import dumpNodeConnections
 from mininet.cli import CLI
+from monitor import monitor_qlen
 
 from subprocess import Popen, PIPE
 from time import sleep, time
@@ -20,7 +21,7 @@ import os
 
 # Parse arguments
 
-parser = ArgumentParser(description="Buffer sizing tests")
+parser = ArgumentParser(description="BufferBloat tests")
 parser.add_argument('--bw-host', '-B',
                     dest="bw_host",
                     type=float,
@@ -34,7 +35,6 @@ parser.add_argument('--bw-net', '-b',
                     action="store",
                     help="Bandwidth of network link",
                     required=True)
-
 parser.add_argument('--delay',
                     dest="delay",
                     type=float,
@@ -66,12 +66,17 @@ parser.add_argument('--maxq',
                     dest="maxq",
                     action="store",
                     help="Max buffer size of network interface in packets",
-                    default=1000)
+                    default=500)
 
 parser.add_argument('--cong',
                     dest="cong",
                     help="Congestion control algorithm to use",
-                    default="bic")
+                    default="reno")
+parser.add_argument('--diff',
+                    help="Enabled differential service", 
+                    action='store_true',
+                    dest="diff",
+                    default=False)
 
 # Expt parameters
 args = parser.parse_args()
@@ -80,8 +85,8 @@ args = parser.parse_args()
 class StarTopo(Topo):
     "Star topology for Buffer Sizing experiment"
 
-    def __init__(self, n=2, cpu=None, bw_host=1000, bw_net=10,
-                 delay=10, maxq=None):
+    def __init__(self, n=2, cpu=None, bw_host=1000, bw_net=1.5,
+                 delay=10, maxq=None, diff=False):
         # Add default members to class.
         super(StarTopo, self ).__init__()
 
@@ -91,12 +96,15 @@ class StarTopo(Topo):
 
         self.add_switch('s0', fail_mode='open')
 
-        self.add_link('h1', 's0', bw=bw_net,
+        
+        self.add_link('h1', 's0', bw=bw_host,
                       max_queue_size=int(maxq) )
 
         for i in xrange(1, n):
-            self.add_link('h%d' % (i+1), 's0',
-                          bw=bw_host, delay=delay )
+            #if diff:
+            self.add_link('h%d' % (i+1), 's0', bw=bw_host)
+            #else:
+            #    self.add_link('h%d' % (i+1), 's0', bw=bw_host, delay=delay)
 
 def ping_latency(net):
     "(Incomplete) verify link latency"
@@ -106,6 +114,11 @@ def ping_latency(net):
     print "Ping result:"
     print result.strip()
 
+def start_tcpprobe():
+    "Install tcp_pobe module and dump to file"
+    os.system("rmmod tcp_probe; modprobe tcp_probe full=1;")
+    Popen("cat /proc/net/tcpprobe > ./tcp_probe_qsize%s.txt" %
+          args.maxq, shell=True)
 
 def bbnet():
     "Create network and run Buffer Bloat experiment"
@@ -116,20 +129,39 @@ def bbnet():
     # Reset to known state
     topo = StarTopo(n=args.n, bw_host=args.bw_host,
                     delay='%sms' % args.delay,
-                    bw_net=args.bw_net, maxq=args.maxq)
+                    bw_net=args.bw_net, maxq=args.maxq, diff=args.diff)
     net = Mininet(topo=topo, host=CPULimitedHost, link=TCLink,
                   autoPinCpus=True)
     net.start()
     dumpNodeConnections(net.hosts)
     net.pingAll()
+    print args.diff
+    if args.diff:
+        print "Differentiate Traffic Between iperf and wget"
+        os.system("bash tc_cmd_diff.sh")
+    else:
+        print "exec tc_cmd.sh"
+        os.system("bash tc_cmd.sh %s" % args.maxq)
+    sleep(2)
     ping_latency(net)
     print "Initially, the delay between two hosts is around %dms" % (int(args.delay)*2) 
     h2 = net.getNodeByName('h2')
-    h2.sendCmd('iperf -s -p 5001 &')
     h1 = net.getNodeByName('h1')
-    h1.sendCmd('iperf -c 10.0.0.2 -p 5001 -t 3600 -i 1 > iperf-qsize%s.txt &' % args.maxq)
-    print "Now, we started iperf between 10.0.0.1 <-> 10.0.0.2, try \'h1 ping h2\' and see what's the delay now."
+    #h2.cmd('python -m SimpleHTTPServer 80 >& /tmp/http.log &')
+    h1.cmd('cd ./http/; nohup python2.7 ./webserver.py &')
+    h1.cmd('cd ../')
+    h2.cmd('iperf -s -p 5001 -i 1 > iperf-recv.txt &')
+    #h1.cmd('iperf -c 10.0.0.2 -p 5001 -t 3600 -i 1 > iperf-qsize%s-send.txt &' % args.maxq)
+    #print "Now, we started iperf between 10.0.0.1 <-> 10.0.0.2, try \'h1 ping h2\' and see what's the delay now."
+    start_tcpprobe()
+    monitor = Process(target=monitor_qlen,args=('s0-eth2', 0.01, 'sw0-qlen-qsize%s.txt' % args.maxq  ))
+    monitor.start()
     CLI( net )    
+    #h2.cmd("sudo pkill -9 -f SimpleHTTPServer")
+    h1.cmd("sudo pkill -9 -f webserver.py")
+    h2.cmd("rm -f index.html*")
+    monitor.terminate()
+    Popen("killall -9 cat", shell=True).wait()
 
 if __name__ == '__main__':
     bbnet()
