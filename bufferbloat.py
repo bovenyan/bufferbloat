@@ -101,10 +101,7 @@ class StarTopo(Topo):
                       max_queue_size=int(maxq) )
 
         for i in xrange(1, n):
-            #if diff:
             self.add_link('h%d' % (i+1), 's0', bw=bw_host)
-            #else:
-            #    self.add_link('h%d' % (i+1), 's0', bw=bw_host, delay=delay)
 
 def ping_latency(net):
     "(Incomplete) verify link latency"
@@ -113,12 +110,6 @@ def ping_latency(net):
     result = h1.waitOutput()
     print "Ping result:"
     print result.strip()
-
-def start_tcpprobe():
-    "Install tcp_pobe module and dump to file"
-    os.system("rmmod tcp_probe; modprobe tcp_probe full=1;")
-    Popen("cat /proc/net/tcpprobe > ./tcp_probe_qsize%s.txt" %
-          args.maxq, shell=True)
 
 def bbnet():
     "Create network and run Buffer Bloat experiment"
@@ -147,20 +138,12 @@ def bbnet():
     print "Initially, the delay between two hosts is around %dms" % (int(args.delay)*2) 
     h2 = net.getNodeByName('h2')
     h1 = net.getNodeByName('h1')
-    #h2.cmd('python -m SimpleHTTPServer 80 >& /tmp/http.log &')
     h1.cmd('cd ./http/; nohup python2.7 ./webserver.py &')
     h1.cmd('cd ../')
-    h2.cmd('iperf -s -p 5001 -i 1 > iperf-recv.txt &')
-    #h1.cmd('iperf -c 10.0.0.2 -p 5001 -t 3600 -i 1 > iperf-qsize%s-send.txt &' % args.maxq)
-    #print "Now, we started iperf between 10.0.0.1 <-> 10.0.0.2, try \'h1 ping h2\' and see what's the delay now."
-    start_tcpprobe()
-    monitor = Process(target=monitor_qlen,args=('s0-eth2', 0.01, 'sw0-qlen-qsize%s.txt' % args.maxq  ))
-    monitor.start()
+    h2.cmd('iperf -s -w 800K -p 5001 -i 1 > iperf-recv.txt &')
     CLI( net )    
-    #h2.cmd("sudo pkill -9 -f SimpleHTTPServer")
     h1.cmd("sudo pkill -9 -f webserver.py")
     h2.cmd("rm -f index.html*")
-    monitor.terminate()
     Popen("killall -9 cat", shell=True).wait()
 
 if __name__ == '__main__':
