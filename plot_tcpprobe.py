@@ -3,6 +3,7 @@ from collections import defaultdict
 import argparse
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--sport', help="Enable the source port filter (Default is dest port)", action='store_true', dest="sport", default=False)
 parser.add_argument('-p', '--port', dest="port", default='5001')
 parser.add_argument('-f', dest="files", nargs='+', required=True)
 parser.add_argument('-o', '--out', dest="out", default=None)
@@ -31,8 +32,13 @@ def parse_file(f):
         fields = l.strip().split(' ')
         if len(fields) != 10:
             break
-        if fields[2].split(':')[1] != args.port:
-            continue
+        if not args.sport:
+            if fields[2].split(':')[1] != args.port:
+                continue
+        else:
+            print "using sport %s (compare with %s)" % (args.port, fields[1].split(':')[1])
+            if fields[1].split(':')[1] != args.port:
+                continue
         sport = int(fields[1].split(':')[1])
         times[sport].append(float(fields[0]))
 
