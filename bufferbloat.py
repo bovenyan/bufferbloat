@@ -83,7 +83,7 @@ args = parser.parse_args()
 
 
 class StarTopo(Topo):
-    "Star topology for Buffer Sizing experiment"
+    "Star topology for Buffer Bloat experiment"
 
     def __init__(self, n=2, cpu=None, bw_host=1000, bw_net=1.5,
                  delay=10, maxq=None, diff=False):
