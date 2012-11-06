@@ -28,7 +28,7 @@ echo "<tr><th>TCP CWND for iperf</th></tr>" >> index.html
 echo "<tr><td><a href=\"${exp}_tcp_cwnd_iperf.png\"><img src=\"${exp}_tcp_cwnd_iperf.png\"/></a></td></tr>" >> index.html
 echo "<tr><th>TCP CWND for wget</th></tr>" >> index.html
 echo "<tr><td><a href=\"${exp}_tcp_cwnd_wget.png\"><img src=\"${exp}_tcp_cwnd_wget.png\"/></a></td></tr>" >> index.html
-echo "</table></center></body></html>" >> indx.html
+echo "</table></center></body></html>" >> index.html
 
 #sudo pkill -9 -f SimpleHTTPServer
 python -m SimpleHTTPServer 8888
