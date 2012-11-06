@@ -36,7 +36,7 @@ def parse_file(f):
             if fields[2].split(':')[1] != args.port:
                 continue
         else:
-            print "using sport %s (compare with %s)" % (args.port, fields[1].split(':')[1])
+#            print "using sport %s (compare with %s)" % (args.port, fields[1].split(':')[1])
             if fields[1].split(':')[1] != args.port:
                 continue
         sport = int(fields[1].split(':')[1])
