@@ -92,16 +92,17 @@ class StarTopo(Topo):
 
         # Create switch and host nodes
         for i in xrange(n):
-            self.add_node( 'h%d' % (i+1), cpu=cpu )
+            self.addHost( 'h%d' % (i+1), cpu=cpu )
+            
 
-        self.add_switch('s0', fail_mode='open')
+        self.addSwitch('s0', fail_mode='open')
 
         
-        self.add_link('h1', 's0', bw=bw_host,
+        self.addLink('h1', 's0', bw=bw_host,
                       max_queue_size=int(maxq) )
 
         for i in xrange(1, n):
-            self.add_link('h%d' % (i+1), 's0', bw=bw_host)
+            self.addLink('h%d' % (i+1), 's0', bw=bw_host)
 
 def ping_latency(net):
     "(Incomplete) verify link latency"
