@@ -30,13 +30,16 @@ def parse_file(f):
     srtt = []
     for l in open(f).xreadlines():
         fields = l.strip().split(' ')
-        if len(fields) != 10:
+        #print len(fields)
+        if len(fields) < 10:
             break
+        #print "using sport? %s" % args.sport
         if not args.sport:
+            #print "using dport %s (compare with %s)" % (args.port, fields[1].split(':')[1])
             if fields[2].split(':')[1] != args.port:
                 continue
         else:
-#            print "using sport %s (compare with %s)" % (args.port, fields[1].split(':')[1])
+            #print "using sport %s (compare with %s)" % (args.port, fields[1].split(':')[1])
             if fields[1].split(':')[1] != args.port:
                 continue
         sport = int(fields[1].split(':')[1])
