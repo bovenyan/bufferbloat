@@ -7,18 +7,12 @@ exit
 fi
 
 exp=$1
-IP=`curl http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null`
-
-if [ -z "$IP" ]
-then
-    IP=`ifconfig eth1 | grep inet | awk '{print $2}' | awk 'BEGIN { FS = ":" } ; { print $2 }'`
-fi
 
 python plot_queue.py --maxy 20 --miny 0 -f ${exp}_sw0-qlen.txt -o ${exp}_queue.png >/dev/null
 python plot_tcpprobe.py -f ${exp}_tcpprobe.txt -o ${exp}_tcp_cwnd_iperf.png -p 5001 >/dev/null
 python plot_tcpprobe.py -f ${exp}_tcpprobe.txt -o ${exp}_tcp_cwnd_wget.png -p 80 --sport >/dev/null
 
-echo "Use http://$IP:8888/ to see the figures on your browser"
+echo "Use http://localhost:8888/ to see the figures on your browser"
 echo "Figure Names"
 echo "Queue : ${exp}_queue.png"
 echo "IPERF CWND : ${exp}_tcp_cwnd_iperf.png"
