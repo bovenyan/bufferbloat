@@ -12,12 +12,12 @@ function add_qdisc {
     echo qdisc added
 
     tc class add dev $dev classid 1:1 parent 1: htb rate $rate
-    tc class add dev $dev classid 1:10 parent 1:1 htb rate $rate2 ceil $rate
-    tc class add dev $dev classid 1:11 parent 1:1 htb rate $rate2 ceil $rate
+    tc class add dev $dev classid 1:10 parent 1:1 htb rate $rate ceil $rate
+    tc class add dev $dev classid 1:11 parent 1:1 htb rate $rate ceil $rate
     echo classes created
 
-    tc qdisc add dev $dev parent 1:10 handle 10: netem delay 10ms
-    tc qdisc add dev $dev parent 1:11 handle 11: netem delay 10ms
+    tc qdisc add dev $dev parent 1:10 handle 10: netem delay 10ms limit 100
+    tc qdisc add dev $dev parent 1:11 handle 11: netem delay 10ms limit 100
 
     # Direct iperf traffic to classid 10:1
     tc filter add dev $dev protocol ip parent 1: prio 1 u32 match ip dport 5001 0xffff flowid 1:10
