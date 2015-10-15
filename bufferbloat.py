@@ -3,7 +3,7 @@
 "CS144 In-class exercise: Buffer Bloat"
 
 from mininet.topo import Topo
-from mininet.node import CPULimitedHost
+from mininet.node import CPULimitedHost, OVSController
 from mininet.link import TCLink
 from mininet.net import Mininet
 from mininet.log import lg, info
@@ -73,7 +73,7 @@ parser.add_argument('--cong',
                     help="Congestion control algorithm to use",
                     default="reno")
 parser.add_argument('--diff',
-                    help="Enabled differential service", 
+                    help="Enabled differential service",
                     action='store_true',
                     dest="diff",
                     default=False)
@@ -93,11 +93,11 @@ class StarTopo(Topo):
         # Create switch and host nodes
         for i in xrange(n):
             self.addHost( 'h%d' % (i+1), cpu=cpu )
-            
+
 
         self.addSwitch('s0', fail_mode='open')
 
-        
+
         self.addLink('h1', 's0', bw=bw_host,
                       max_queue_size=int(maxq) )
 
@@ -123,7 +123,7 @@ def bbnet():
                     delay='%sms' % args.delay,
                     bw_net=args.bw_net, maxq=args.maxq, diff=args.diff)
     net = Mininet(topo=topo, host=CPULimitedHost, link=TCLink,
-                  autoPinCpus=True)
+                  autoPinCpus=True, controller=OVSController)
     net.start()
     dumpNodeConnections(net.hosts)
     net.pingAll()
@@ -136,13 +136,13 @@ def bbnet():
         os.system("bash tc_cmd.sh %s" % args.maxq)
     sleep(2)
     ping_latency(net)
-    print "Initially, the delay between two hosts is around %dms" % (int(args.delay)*2) 
+    print "Initially, the delay between two hosts is around %dms" % (int(args.delay)*2)
     h2 = net.getNodeByName('h2')
     h1 = net.getNodeByName('h1')
     h1.cmd('cd ./http/; nohup python2.7 ./webserver.py &')
     h1.cmd('cd ../')
     h2.cmd('iperf -s -w 16m -p 5001 -i 1 > iperf-recv.txt &')
-    CLI( net )    
+    CLI( net )
     h1.cmd("sudo pkill -9 -f webserver.py")
     h2.cmd("rm -f index.html*")
     Popen("killall -9 cat", shell=True).wait()
